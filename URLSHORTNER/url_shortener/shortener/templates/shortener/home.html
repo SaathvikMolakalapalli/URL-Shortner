@@ -1,0 +1,234 @@
+<!-- shortener/templates/shortener/home.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Shortener</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styling */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f0f4f8;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            word-wrap: break-word; /* wrap long content */
+        }
+
+        h2 {
+            text-align: center;
+            color: #007BFF;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 14px 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            overflow-wrap: break-word;
+        }
+
+        input[type=text]:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        button {
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .short-url {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e9f0ff;
+            padding: 12px 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .short-url a {
+            word-break: break-all; /* make long URL break within container */
+            flex: 1;
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover { background: #218838; }
+
+        .error {
+            color: red;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            margin-top: 35px;
+            margin-bottom: 15px;
+            color: #007BFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* make cells respect container width */
+            word-wrap: break-word;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+            border-radius: 8px;
+        }
+
+        tr:hover { background-color: #f1f5fb; }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+            word-break: break-word;
+        }
+
+        a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            input[type=text], button { font-size: 14px; padding: 12px; }
+            .short-url { font-size: 14px; flex-direction: column; align-items: flex-start; gap: 8px; }
+            .copy-btn { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>URL Shortener</h2>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="long_url" placeholder="Enter your URL here">
+            <input type="text" name="custom_code" placeholder="Custom code (optional)">
+            <button type="submit">Shorten URL</button>
+        </form>
+
+        {% if short_url %}
+            <div class="short-url">
+                <a href="{{ short_url }}" target="_blank">{{ short_url }}</a>
+                <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ short_url }}')">Copy</button>
+            </div>
+        {% endif %}
+
+        {% if qr_code_base64 %}
+            <div class="short-url-qr" style="margin-top: 15px; text-align: center;">
+                <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code">
+            </div>
+        {% endif %}
+
+
+        {% if last_urls %}
+            <h3>Last 5 Shortened URLs</h3>
+            <table>
+                <tr>
+                    <th>Short URL</th>
+                    <th>Original URL</th>
+                    <th>Visits</th>
+                </tr>
+                {% for url in last_urls %}
+                <tr>
+                    <td><a href="/{{ url.short_code }}" target="_blank">{{ url.short_code }}</a></td>
+                    <td><a href="{{ url.original_url }}" target="_blank">{{ url.original_url }}</a></td>
+                    <td>{{ url.visits }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+    <!-- Add this inside <body>, after the main container -->
+<div class="credits">
+    <p>Created by Saathvik & Team</p>
+</div>
+
+<style>
+    .credits {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        font-size: 12px;
+        color: #555;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 4px 8px;
+        border-radius: 5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        z-index: 100;
+    }
+
+    .credits p {
+        margin: 0;
+    }
+</style>
+
+</body>
+</html>
